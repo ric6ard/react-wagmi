@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPublicClient, http } from 'viem';
 import { mainnet } from 'viem/chains';
 import './HomePage.css'; // 导入 HomePage.css
@@ -95,6 +95,16 @@ const WatchUsdt: React.FC = () => {
       startMonitoring();
     }
   };
+
+  useEffect(() => {
+    return () => {
+      // 组件卸载时停止监听
+      if (unwatchRef.current) {
+        unwatchRef.current();
+        unwatchRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div className="pages">

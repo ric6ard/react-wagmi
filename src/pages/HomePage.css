@@ -124,6 +124,7 @@ pre {
 .table {
   width: 100%;
   border-collapse: collapse;
+  overflow-x: auto;
 }
 
 .table th, .table td {
@@ -138,4 +139,27 @@ pre {
 .amount {
   color: #414141;
   font-weight: bold;
+}
+
+/* 媒体查询：在小屏幕设备上调整表格样式 */
+@media (max-width: 600px) {
+  .table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .table th, .table td {
+    padding: 6px;
+    font-size: 14px;
+  }
+
+  .advice {
+    font-size: 14px;
+  }
+
+  button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
 }
