@@ -1,7 +1,8 @@
 import { useAppKitAccount, useAppKitNetworkCore } from '@reown/appkit/react'
-import { useSignTypedData } from 'wagmi'
+import { useReadContract, useSignTypedData, useWriteContract } from 'wagmi'
 import { useState, useEffect } from 'react'
 import { type Address, parseSignature } from 'viem'
+import { ERC20Abi, tokenBankABI } from './abi'
 
 // EIP-2612 类型定义
 const types = {
@@ -14,6 +15,9 @@ const types = {
   ]
 }
 
+const ERC20Address = '0x8364dBE3F69961a0A15039A8a84542C25DAf153b' //verifyingContract
+const tokenBankAddress ='0x111D07Ec24Ff76ecEFA35AF72c7ddaB9b5692591' //spender
+
 export function SignTransaction() {
   const { address, isConnected } = useAppKitAccount()
   const { chainId } = useAppKitNetworkCore()
@@ -23,7 +27,7 @@ export function SignTransaction() {
     name: 'Contract Name',
     version: '1',
     chainId: chainId,
-    verifyingContract: '0x1111111111111111111111111111111111111111'
+    verifyingContract: ERC20Address
   })
 
   // 监听 chainId 的变化，并更新 domainParams.chainId
@@ -37,7 +41,7 @@ export function SignTransaction() {
   // 交易参数状态
   const [txParams, setTxParams] = useState({
     owner: address,
-    spender: '0x0000000000000000000000000000000000000000',
+    spender: tokenBankAddress,
     value: '',
     deadline: '1800000000',
     nonce: ''
@@ -50,6 +54,50 @@ export function SignTransaction() {
       owner: address
     }))
   }, [address])
+
+  const { refetch: refetchName } = useReadContract({
+    address: domainParams.verifyingContract as `0x${string}`,
+    abi: ERC20Abi,
+    functionName: 'name',
+    query:{enabled: false}, // disable the query on load
+  })
+
+  const {refetch: refetchBalance} = useReadContract({
+    address: domainParams.verifyingContract as `0x${string}`,
+    abi: ERC20Abi,
+    functionName: 'balanceOf',
+    args: [address as `0x${string}`],
+    query:{enabled: false}, // disable the query on load
+  })
+
+  const { refetch: refetchNonce } = useReadContract({
+    address: domainParams.verifyingContract as `0x${string}`,
+    abi: ERC20Abi,
+    functionName: 'nonces',
+    args: [address as `0x${string}`],
+    query:{enabled: false}, // disable the query on load
+  })
+
+  const updateContractDetail = async () => {
+    console.log("Start Reading Contract");
+    console.log("Contract: ", domainParams.verifyingContract)
+    const contractName = (await refetchName()).data;
+    const balance = (await refetchBalance()).data;
+    const nonce = (await refetchNonce()).data;
+    console.log("Contract Name: ", contractName)
+    console.log("balance: ", balance)
+    console.log("nonce: ", nonce)
+
+    setDomainParams(prev => ({
+      ...prev,
+      name: contractName?.toString() || 'Contract Name'
+    })) 
+
+    setTxParams(prev => ({
+      ...prev,
+      nonce: nonce ? nonce.toString() : ''
+    }))
+  }
 
   const [signedTx, setSignedTx] = useState('')
 
@@ -96,6 +144,26 @@ export function SignTransaction() {
     }
   }
 
+  const { writeContract, isPending, isSuccess } = useWriteContract()
+
+  const sendTransaction = async () => {
+    writeContract({
+      address: tokenBankAddress as `0x${string}`,
+      abi: tokenBankABI,
+      functionName: 'permitDeposit',
+      args: [
+        domainParams.verifyingContract as `0x${string}`, 
+        // txParams.owner as `0x${string}`,
+        BigInt(txParams.value || '0'), 
+        BigInt(txParams.deadline || '0'), 
+        Number(signatureDetails.v), 
+        signatureDetails.r as `0x${string}`, 
+        signatureDetails.s as `0x${string}`
+      ],
+    })
+    console.log("Send Transaction", isPending, isSuccess)
+  }
+
   // 处理输入变化
   const handleDomainInputChange = (field: keyof typeof domainParams) => 
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,6 +186,15 @@ export function SignTransaction() {
       <h1>Sign EIP-2612 Transaction</h1>
       {isConnected && (
         <div>
+          <section>
+            操作说明：<br />
+            · ERC20地址填入Verifying Contract<br />
+            · Token Bank地址填入Spender<br />
+            · 然后点击【按钮1】更新Name, Nonce<br />
+            · 填满其他空格<br />
+            · 【按钮2】签名交易<br />
+            · 【按钮3】发送交易<br />
+          </section>
           <section>
             <h2>Domain Parameters</h2>
             <label>
@@ -205,7 +282,9 @@ export function SignTransaction() {
                 placeholder="0"
               />
             </label>
-            <button onClick={handleSignTx}>Sign Transaction</button>
+            <button onClick={updateContractDetail}>1. Update Contract Detail by address</button>
+            <button onClick={handleSignTx}>2. Sign Transaction</button>
+            <button onClick={sendTransaction}>3. Send Transaction</button>
           </section>
           
           {signedTx && (
