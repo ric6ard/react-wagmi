@@ -1,6 +1,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --w3m-accent: black !important; /* 覆盖默认的蓝色 */
+  --w3m-accent-hover: #333 !important; /* 覆盖默认的蓝色 */
+  --w3m-accent-active: #333 !important; /* 覆盖默认的蓝色 */
 }
 
 html,
@@ -35,14 +38,18 @@ a {
 }
 
 section {
+  margin: 15px;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 16px;
+  padding: 10px;
   background-color: #f9f9f9;
-  padding: 13px;
-  margin: 10px;
-  width: 90%;
-  text-align: left;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: auto;
+  width: 60vw;
+  gap: 0.8vh;
 }
 
 .pages {

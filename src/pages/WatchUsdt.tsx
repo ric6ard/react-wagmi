@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPublicClient, http } from 'viem';
 import { mainnet } from 'viem/chains';
-import './HomePage.css'; // 导入 HomePage.css
+import './Default.css'; // 导入 Default.css
 
 // USDT 合约地址
 const USDT_ADDRESS = '0xdac17f958d2ee523a2206206994597c13d831ec7' as const;

@@ -1,36 +1,10 @@
-import { createAppKit } from '@reown/appkit/react'
-
-import { WagmiProvider } from 'wagmi'
 import { useState } from 'react'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ActionButtonList } from '../components/ActionButtonList'
 import { SmartContractActionButtonList } from '../components/SmartContractActionButtonList'
 import { InfoList } from '../components/InfoList'
-import { projectId, metadata, networks, wagmiAdapter } from '../config'
 
-import "./HomePage.css"
-
-const queryClient = new QueryClient()
-
-const generalConfig = {
-  projectId,
-  networks,
-  metadata,
-  themeMode: 'light' as const,
-  themeVariables: {
-    '--w3m-accent': '#000000',
-  }
-}
-
-// Create modal
-createAppKit({
-  adapters: [wagmiAdapter],
-  ...generalConfig,
-  features: {
-    analytics: true // Optional - defaults to your Cloud configuration
-  }
-})
+import "./Default.css"
 
 export function HomePage() {
   const [transactionHash, setTransactionHash] = useState<`0x${string}` | undefined>(undefined);
@@ -54,14 +28,10 @@ export function HomePage() {
     <div className={"pages"}>
       {/* <img src="/reown.svg" alt="Reown" style={{ width: '150px', height: '150px' }} /> */}
       <h1>Wallet Connect Example</h1>
-      <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-        <QueryClientProvider client={queryClient}>
             <appkit-button />
             <ActionButtonList sendHash={receiveHash} sendSignMsg={receiveSignedMsg} sendBalance={receivebalance}/>
             <SmartContractActionButtonList />
             <InfoList hash={transactionHash} signedMsg={signedMsg} balance={balance}/>
-        </QueryClientProvider>
-      </WagmiProvider>
     </div>
   )
 }
